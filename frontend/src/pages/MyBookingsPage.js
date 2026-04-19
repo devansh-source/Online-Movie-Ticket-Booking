@@ -138,6 +138,28 @@ const MyBookingsPage = () => {
         }
     };
 
+    const handleDeleteHistory = async (bookingId) => {
+        if (!window.confirm('Are you sure you want to remove this booking from your history? This action cannot be undone.')) return;
+        try {
+            let userInfo = null;
+            try {
+                userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            } catch (e) {
+                console.warn('localStorage access blocked or invalid data');
+            }
+            if (!userInfo || !userInfo.token) {
+                alert('User not authenticated. Please log in again.');
+                return;
+            }
+            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            await api.delete(`/bookings/${bookingId}`, config);
+            alert('Booking removed from history.');
+            setBookings(bookings.filter(b => b._id !== bookingId));
+        } catch (err) {
+            alert('Failed to delete history.');
+        }
+    };
+
     if (loading) return <div className="loading-message">Loading bookings...</div>;
     if (error) return <div className="alert-error my-bookings-container">{error}</div>;
 
@@ -191,14 +213,36 @@ const MyBookingsPage = () => {
                                 <div className="booking-detail-item">
                                     <strong>{t('bookedOn')}:</strong> <span>{new Date(booking.createdAt).toLocaleDateString()}</span>
                                 </div>
-                                {booking.qrCodeUrl && (
-                                    <div className="booking-detail-item">
-                                        <strong>{t('eTicket')}:</strong>
-                                        <img src={booking.qrCodeUrl} alt="QR Code" className="qr-code" />
+                                {booking.qrCodes && booking.qrCodes.length > 0 ? (
+                                    <div className="booking-detail-item tickets-container">
+                                        <strong>{t('eTickets')} ({booking.qrCodes.length}):</strong>
+                                        <div className="qr-codes-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', marginTop: '10px' }}>
+                                            {booking.qrCodes.map((qr, index) => (
+                                                <div key={index} className="qr-item" style={{ textAlign: 'center' }}>
+                                                    <img src={qr.url} alt={`QR ${qr.seat}`} className="qr-code" style={{ width: '120px', height: '120px' }} />
+                                                    <p style={{ fontSize: '0.8rem', fontWeight: 'bold', margin: '4px 0' }}>Seat: {qr.seat}</p>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
+                                ) : (
+                                    booking.qrCodeUrl && (
+                                        <div className="booking-detail-item">
+                                            <strong>{t('eTicket')}:</strong>
+                                            <img src={booking.qrCodeUrl} alt="QR Code" className="qr-code" />
+                                        </div>
+                                    )
+                                )}
+                                {booking.status === 'Confirmed' ? (
+                                    <button onClick={() => handleCancelBooking(booking._id)} className="btn-cancel">{t('cancelBooking')}</button>
+                                ) : (
+                                    <button onClick={() => handleDeleteHistory(booking._id)} className="btn-ghost" style={{ marginTop: '10px', color: '#ff4444' }}>🗑️ Delete History</button>
+                                )}
+                                {booking.status !== 'Confirmed' && (
+                                    <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '5px' }}>This record is saved in your history.</p>
                                 )}
                                 {booking.status === 'Confirmed' && (
-                                    <button onClick={() => handleCancelBooking(booking._id)} className="btn-cancel">{t('cancelBooking')}</button>
+                                     <button onClick={() => handleDeleteHistory(booking._id)} className="btn-ghost" style={{ marginLeft: '10px', fontSize: '0.8rem', color: '#888' }}>Remove from list</button>
                                 )}
                             </div>
                         </div>

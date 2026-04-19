@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 const MovieCard = ({ movie }) => {
     const navigate = useNavigate();
 
-    // Ensure you have a valid poster URL before displaying
-    const posterUrl = movie.posterUrl || '/placeholder.jpg';
+    // Self-healing logic: Check multiple possible fields for the image URL
+    const posterUrl = movie.posterUrl || movie.image || movie.poster || '/placeholder.jpg';
 
     const handleImageError = (e) => {
-        e.target.src = '/placeholder.jpg'; // Fallback to a local placeholder image
+        // Fallback to a plain dark cinematic background if even YouTube fails
+        e.target.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1925&auto=format&fit=crop'; 
     };
 
     return (

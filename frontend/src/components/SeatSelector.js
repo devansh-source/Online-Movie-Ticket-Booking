@@ -5,34 +5,37 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useTranslation } from 'react-i18next';
 
+// --- ADD THIS LINE ---
+// Use the live Render URL for production, otherwise use localhost
+const SOCKET_URL = process.env.NODE_ENV === 'production'
+    ? 'https://online-movie-ticket-booking-backend.onrender.com'
+    : 'http://localhost:5000';
+// --- END OF ADD ---
+
 const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
     ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
     : Promise.resolve(null);
 
 const PaymentForm = ({ totalPrice, onPaymentSuccess, onPaymentError }) => {
+    // ... (rest of the PaymentForm component is unchanged)
     const stripe = useStripe();
     const elements = useElements();
     const [loading, setLoading] = useState(false);
     const { t } = useTranslation();
-
     const handleSubmit = async (event) => {
         event.preventDefault();
         if (!stripe || !elements) return;
-
         setLoading(true);
         const cardElement = elements.getElement(CardElement);
-
         const { error, token } = await stripe.createToken(cardElement);
         if (error) {
             onPaymentError(error.message);
             setLoading(false);
             return;
         }
-
         onPaymentSuccess(token.id);
         setLoading(false);
     };
-
     return (
         <form onSubmit={handleSubmit} className="payment-form">
             <CardElement />
@@ -42,9 +45,7 @@ const PaymentForm = ({ totalPrice, onPaymentSuccess, onPaymentError }) => {
         </form>
     );
 };
-
 const seatPrice = 500; // Base price per ticket in INR
-
 const SeatSelector = ({ movie, showtime, navigate }) => {
     const [selectedSeats, setSelectedSeats] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -53,42 +54,36 @@ const SeatSelector = ({ movie, showtime, navigate }) => {
     const [pendingSeats, setPendingSeats] = useState(new Set(showtime.pendingSeats || []));
     const [bookedSeats, setBookedSeats] = useState(new Set(showtime.bookedSeats || []));
     const [pendingBookingId, setPendingBookingId] = useState(null);
-    const [paymentMethod, setPaymentMethod] = useState('online');
+    const paymentMethod = 'online'; // Changed from useState
     const [showPayment, setShowPayment] = useState(false);
     const { t } = useTranslation();
-
-    // Extract dynamic screen dimensions
     const { rows, cols, screenName } = showtime.screenDetails;
-
     const totalPrice = (selectedSeats.length * seatPrice).toFixed(2);
-
+    
     // Socket.IO setup
     useEffect(() => {
-        const newSocket = io('http://localhost:5000');
+        // --- UPDATE THIS LINE ---
+        const newSocket = io(SOCKET_URL); // Use the dynamic URL
+        // --- END OF UPDATE ---
+
         setSocket(newSocket);
-
         newSocket.emit('join-showtime', showtime._id);
-
         newSocket.on('seat-update', (data) => {
             setPendingSeats(new Set(data.pendingSeats || []));
             setBookedSeats(new Set(data.bookedSeats || []));
         });
-
         return () => newSocket.close();
     }, [showtime._id]);
     
+    // ... (rest of the SeatSelector component is unchanged)
     // Helper to generate seat labels (A1, A2, B1, B2...)
     const getRowLabel = (index) => String.fromCharCode(65 + index); // 65 is 'A'
-
     // --- Utility Functions ---
-
     const getSeatId = (rowLabel, number) => `${rowLabel}${number}`;
     
     const isSeatAvailable = (seatId) => !bookedSeats.has(seatId) && !pendingSeats.has(seatId);
-
     const toggleSeatSelection = async (seatId) => {
         if (!isSeatAvailable(seatId)) return;
-
         let userInfo = null;
         try {
             userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -100,73 +95,47 @@ const SeatSelector = ({ movie, showtime, navigate }) => {
             navigate('/login');
             return;
         }
-
         setSelectedSeats(prev => {
             const isSelected = prev.includes(seatId);
             if (isSelected) {
-                // Deselect: release seat
-                setPendingSeats(prevPending => {
-                    const newPending = new Set(prevPending);
-                    newPending.delete(seatId);
-                    return newPending;
-                });
                 return prev.filter(s => s !== seatId);
             } else {
-                // Select: lock seat
-                setPendingSeats(prevPending => new Set([...prevPending, seatId]));
                 return [...prev, seatId];
             }
         });
-
-        // Lock/release seats on backend
-        try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-
-            if (selectedSeats.includes(seatId)) {
-                // Release
-                await api.delete('/bookings/release-seats', {
-                    ...config,
-                    data: { movieId: movie._id, showtimeId: showtime._id, seatsToRelease: [seatId] }
-                });
-            } else {
-                // Lock
-                const res = await api.post('/bookings/lock-seats', {
-                    movieId: movie._id,
-                    showtimeId: showtime._id,
-                    seatsToLock: [seatId]
-                }, config);
-                setPendingBookingId(res.data.pendingBookingId);
-            }
-        } catch (error) {
-            setBookingError('Failed to lock/release seat. Please try again.');
-            // Revert UI
-            setSelectedSeats(prev => prev.filter(s => s !== seatId));
-            setPendingSeats(prevPending => {
-                const newPending = new Set(prevPending);
-                newPending.delete(seatId);
-                return newPending;
-            });
-        }
     };
 
     // --- Ticket Booking & Payment Gateway ---
-    const handleProceedToPayment = () => {
+    const handleProceedToPayment = async () => {
         if (selectedSeats.length === 0) {
             setBookingError('Please select at least one seat.');
             return;
         }
-        setShowPayment(true);
-    };
 
+        setLoading(true);
+        try {
+            const authConfig = {
+                headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo'))?.token}` },
+            };
+
+            // Lock ALL selected seats in ONE single call
+            const res = await api.post('/bookings/lock-seats', {
+                movieId: movie._id,
+                showtimeId: showtime._id,
+                seatsToLock: selectedSeats
+            }, authConfig);
+
+            setPendingBookingId(res.data.pendingBookingId);
+            setShowPayment(true);
+        } catch (err) {
+            setBookingError(err.response?.data?.message || 'Failed to lock seats. They might be taken.');
+        } finally {
+            setLoading(false);
+        }
+    };
     const handlePaymentSuccess = async (stripeToken) => {
         setLoading(true);
         setBookingError('');
-
         try {
             let userInfo = null;
             try {
@@ -184,22 +153,18 @@ const SeatSelector = ({ movie, showtime, navigate }) => {
                     Authorization: `Bearer ${userInfo.token}`,
                 },
             };
-
             const confirmPayload = {
                 pendingBookingId,
                 totalPrice: parseFloat(totalPrice),
                 paymentMethod,
                 stripeToken,
             };
-
             const res = await api.post('/bookings/confirm-booking', confirmPayload, config);
-
             alert('Booking successful! QR code generated.');
             if (res.data.qrCodeUrl) {
                 console.log('QR Code URL:', res.data.qrCodeUrl);
             }
             navigate('/mybookings');
-
         } catch (error) {
             const message = error.response && error.response.data.message
                 ? error.response.data.message
@@ -209,30 +174,24 @@ const SeatSelector = ({ movie, showtime, navigate }) => {
             setLoading(false);
         }
     };
-
     const handlePaymentError = (errorMessage) => {
         setBookingError(errorMessage);
     };
-
     // --- Rendering ---
-
     const renderSeat = (rowLabel, number) => {
         const seatId = getSeatId(rowLabel, number);
         const isSelected = selectedSeats.includes(seatId);
         const isBooked = bookedSeats.has(seatId);
         const isPending = pendingSeats.has(seatId);
-
         let seatClass = 'seat';
         if (isBooked) seatClass += ' booked';
         else if (isPending) seatClass += ' pending';
         else if (isSelected) seatClass += ' selected';
         else seatClass += ' available';
-
         // Applying inline style for grid column placement (Responsive)
         const gridStyle = {
-            gridColumn: number,
+            gridColumn: number + 1,
         };
-
         return (
             <div
                 key={seatId}
@@ -244,21 +203,19 @@ const SeatSelector = ({ movie, showtime, navigate }) => {
             </div>
         );
     };
-
     return (
         <div className="seat-selector-container">
             <h2>Select Your Seats for {screenName}</h2>
             <div className="screen-indicator">Screen</div>
-
             {/* Seat Map Grid */}
             <div className="seat-map-wrapper">
-                <div className="seat-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+                <div className="seat-grid" style={{ gridTemplateColumns: `auto repeat(${cols}, 1fr)` }}>
                     {Array.from({ length: rows }, (_, rowIndex) => {
                         const rowLabel = getRowLabel(rowIndex);
                         return (
                             <React.Fragment key={rowLabel}>
                                 {/* Row Label Column */}
-                                <div className="row-label">{rowLabel}</div> 
+                                <div className="row-label" style={{ gridColumn: 1 }}>{rowLabel}</div> 
                                 {/* Seats for the Row */}
                                 {Array.from({ length: cols }, (_, colIndex) => colIndex + 1).map(number =>
                                     renderSeat(rowLabel, number)
@@ -276,14 +233,11 @@ const SeatSelector = ({ movie, showtime, navigate }) => {
                 <div className="legend-item"><span className="legend-box pending"></span> Pending</div>
                 <div className="legend-item"><span className="legend-box booked"></span> Booked</div>
             </div>
-
             <div className="booking-summary">
                 <p>{t('selectedSeats')}: <span className="summary-seats">{selectedSeats.join(', ') || 'None'}</span></p>
                 <p>{t('pricePerSeat')}: ₹{seatPrice.toFixed(2)}</p>
                 <h3>{t('totalPrice')}: <span className="summary-price">₹{totalPrice}</span></h3>
-
                 {bookingError && <p className="error-message-small">{bookingError}</p>}
-
                 {!showPayment ? (
                     <button
                         className="btn-book-final"
@@ -314,5 +268,4 @@ const SeatSelector = ({ movie, showtime, navigate }) => {
         </div>
     );
 };
-
 export default SeatSelector;

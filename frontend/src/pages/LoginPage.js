@@ -55,44 +55,51 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="auth-container">
-            <form onSubmit={submitHandler} className="auth-form">
-                <h2>Sign In</h2>
-                {error && <div className="alert-error">{error}</div>}
+        <div className="auth-page-wrapper">
+            <div className="auth-container">
+                <div className="auth-card">
+                    <div className="auth-header">
+                        <h2>Welcome Back</h2>
+                        <p>Sign in to your CinePass account</p>
+                    </div>
+                    
+                    <form onSubmit={submitHandler} className="auth-form">
+                        {error && <div className="alert-error" style={{marginBottom: '20px'}}>{error}</div>}
 
-                <div className="form-group">
-                    <label>Email Address</label>
-                    <input 
-                        type="email" 
-                        placeholder="Enter email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        required 
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Password</label>
-                    <input 
-                        type="password" 
-                        placeholder="Enter password" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        required 
-                    />
-                </div>
-                
-                {/* Link to Forgot Password Page */}
-                <div className="forgot-password-link">
-                    <Link to="/forgot-password">Forgot Password?</Link>
-                </div>
+                        <div className="form-group">
+                            <label>Email Address</label>
+                            <input 
+                                type="email" 
+                                placeholder="Enter your email" 
+                                value={email} 
+                                onChange={(e) => setEmail(e.target.value)} 
+                                required 
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Password</label>
+                            <input 
+                                type="password" 
+                                placeholder="Enter your password" 
+                                value={password} 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                required 
+                            />
+                        </div>
+                        
+                        <div className="forgot-password-link">
+                            <Link to="/forgot-password">Forgot Password?</Link>
+                        </div>
 
-                <button type="submit" className="btn-primary" disabled={loading}>
-                    {loading ? 'Signing In...' : 'Sign In'}
-                </button>
-                
-            </form>
-            <div className="register-link">
-                New Customer? <span onClick={() => navigate('/register')}>Register Here</span>
+                        <button type="submit" className="btn-primary btn-auth" disabled={loading}>
+                            {loading ? 'Signing In...' : 'Sign In'}
+                        </button>
+                    </form>
+
+                    <div className="auth-footer">
+                        Don't have an account? <span onClick={() => navigate('/register')}>Create Account</span>
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -50,11 +50,9 @@ const PaymentPage = () => {
     const { t } = useTranslation();
 
     // Assume data passed via navigate state or props
-    const { selectedSeats, movie, showtime, pendingBookingId } = location.state || {};
-    const seatPrice = 500; // Base price per ticket
+    const { selectedSeats, pendingBookingId } = location.state || {};
+    const seatPrice = 500;
     const totalPrice = (selectedSeats?.length * seatPrice).toFixed(2) || '0.00';
-
-    const [paymentMethod, setPaymentMethod] = useState('online');
     const [bookingError, setBookingError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -89,7 +87,7 @@ const PaymentPage = () => {
 
             const res = await api.post('/bookings/confirm-booking', confirmPayload, config);
 
-            alert('Booking successful! QR code generated.');
+            alert('Ticket booked successfully!');
             if (res.data.qrCodeUrl) {
                 console.log('QR Code URL:', res.data.qrCodeUrl);
             }

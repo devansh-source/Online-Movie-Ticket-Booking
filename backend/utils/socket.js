@@ -4,9 +4,14 @@ const socketIo = require('socket.io');
 let io;
 
 const initSocket = (server) => {
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'https://online-movie-ticket-booking-frontend-pj7x2q9y2.vercel.app',
+        'https://online-movie-ticket-booking-frontend-46lsu9qbo.vercel.app',
+    ];
     io = socketIo(server, {
         cors: {
-            origin: process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.FRONTEND_URL,
+            origin: allowedOrigins,
             methods: ['GET', 'POST'],
         },
     });

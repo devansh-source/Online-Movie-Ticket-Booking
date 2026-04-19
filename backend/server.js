@@ -1,17 +1,10 @@
 // --------------------- Imports ---------------------
-const express = require("express");
 const http = require("http");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const cors = require("cors");
-const path = require("path");
 
-// --- Import Route Files ---
-const authRoutes = require("./routes/authRoutes");
-const movieRoutes = require("./routes/movieRoutes");
-const bookingRoutes = require("./routes/bookingRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const reviewRoutes = require("./routes/reviewRoutes");
+// --- Import App ---
+const app = require("./app");
 
 // --- Socket.IO integration ---
 const { initSocket } = require("./utils/socket");
@@ -19,8 +12,7 @@ const { initSocket } = require("./utils/socket");
 // --------------------- Environment Config ---------------------
 dotenv.config();
 
-// --------------------- App & Server Setup ---------------------
-const app = express();
+// --------------------- Server Setup ---------------------
 const server = http.createServer(app);
 initSocket(server);
 
@@ -36,55 +28,6 @@ const connectDB = async () => {
 };
 
 connectDB();
-
-// --------------------- Middleware Setup ---------------------
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-  })
-);
-
-app.use(express.json());
-
-// --------------------- API Routes ---------------------
-app.use("/api/auth", authRoutes);
-app.use("/api/movies", movieRoutes);
-app.use("/api/bookings", bookingRoutes);
-app.use("/api/admin", adminRoutes);
-
-// --------------------- Production Deployment ---------------------
-if (process.env.NODE_ENV === "production") {
-  const __dirname1 = path.resolve();
-  app.use(express.static(path.join(__dirname1, "/frontend/build")));
-
-  app.get("*", (req, res) =>
-    res.sendFile(path.resolve(__dirname1, "frontend", "build", "index.html"))
-  );
-} else {
-  // Serve static files from frontend/public in development
-  app.use(express.static(path.join(__dirname, "../frontend/public")));
-
-  app.get("/", (req, res) => {
-    res.send("🎬 Movie Booking API is running in development mode...");
-  });
-}
-
-// --------------------- Error Handling ---------------------
-app.use((req, res, next) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  res.status(404);
-  next(error);
-});
-
-app.use((err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode).json({
-    message: err.message,
-    stack: process.env.NODE_ENV === "production" ? null : err.stack,
-  });
-});
 
 // --------------------- Server Setup ---------------------
 const PORT = process.env.PORT || 5000;

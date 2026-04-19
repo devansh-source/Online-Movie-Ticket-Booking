@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 
 const Header = () => {
     const [user, setUser] = useState(null); // Use a user object to store name and admin status
@@ -31,27 +31,25 @@ const Header = () => {
     return (
         <header className="main-header">
             <nav className="nav-container">
-                <Link to="/" className="logo">MERN Tickets 🍿</Link>
+                <Link to="/" className="logo">ShowTime <span>🎟️</span></Link>
                 <div className="nav-links">
-                    <Link to="/movies" className="nav-item">Movies</Link>
+                    <NavLink to="/movies" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>Movies</NavLink>
                     
-                    {/* --- CONDITIONAL ADMIN LINK --- */}
                     {isAdmin && (
-                        <Link to="/admin/dashboard" className="nav-item admin-link">Dashboard</Link>
+                        <NavLink to="/admin/dashboard" className={({ isActive }) => isActive ? 'nav-item admin-link active' : 'nav-item admin-link'}>Dashboard</NavLink>
                     )}
-                    {/* ------------------------------ */}
                     
                     {userName ? (
                         <>
-                            <Link to="/mybookings" className="nav-item">My Bookings</Link>
-                            <span className="welcome-user">Welcome, {userName}!</span>
+                            <NavLink to="/mybookings" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>My Bookings</NavLink>
+                            <span className="welcome-user">Welcome, {userName}</span>
                             <button onClick={logoutHandler} className="btn-logout">Logout</button>
                         </>
                     ) : (
-                        <>
-                            <Link to="/login" className="nav-item">Sign In</Link>
-                            <Link to="/register" className="btn-primary">Register</Link>
-                        </>
+                        <div className="auth-nav-group">
+                            <NavLink to="/login" className={({ isActive }) => isActive ? 'nav-item login-link active' : 'nav-item login-link'}>Sign In</NavLink>
+                            <Link to="/register" className="btn-primary nav-register-btn">Register</Link>
+                        </div>
                     )}
                 </div>
             </nav>

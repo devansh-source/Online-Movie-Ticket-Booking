@@ -34,8 +34,14 @@ const bookingSchema = mongoose.Schema(
             type: Date, // For pending bookings, expiry time for seat lock
         },
         qrCodeUrl: {
-            type: String, // URL or data for QR code e-ticket
+            type: String, // Kept for backward compatibility
         },
+        qrCodes: [
+            {
+                seat: String,
+                url: String
+            }
+        ],
         paymentId: {
             type: String,
         },

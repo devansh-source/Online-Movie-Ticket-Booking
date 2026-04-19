@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-// Set the base URL based on the environment (local vs. production)
-const baseURL = process.env.NODE_ENV === 'production' 
-    ? '/api' 
-    : 'http://localhost:5000/api'; 
+// Use the live Render URL for production, otherwise use localhost
+const baseURL = process.env.NODE_ENV === 'production'
+    ? 'https://online-movie-ticket-booking-backend.onrender.com/api'
+    : 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: baseURL,
@@ -11,5 +11,24 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Automatically attach JWT token from localStorage to every request
+api.interceptors.request.use(
+  (config) => {
+    try {
+      const userInfo = localStorage.getItem('userInfo');
+      if (userInfo) {
+        const parsed = JSON.parse(userInfo);
+        if (parsed?.token) {
+          config.headers.Authorization = `Bearer ${parsed.token}`;
+        }
+      }
+    } catch (e) {
+      // localStorage blocked or invalid data, proceed without token
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default api;

@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler');
-const User = require('../models/UserModel'); 
-const generateToken = require('../utils/generateToken'); 
+const User = require('../models/UserModel');
+const generateToken = require('../utils/generateToken');
 const { sendRegistrationWelcome, sendPasswordResetEmail } = require('../utils/emailService');
 const crypto = require('crypto');
 
@@ -17,7 +17,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await User.create({ name, email, password });
 
     if (user) {
-        sendRegistrationWelcome(user.email, user.name); 
+        sendRegistrationWelcome(user.email, user.name);
 
         res.status(201).json({
             _id: user._id,
@@ -46,7 +46,7 @@ const loginUser = asyncHandler(async (req, res) => {
             token: generateToken(user._id),
         });
     } else {
-        res.status(401); 
+        res.status(401);
         throw new Error('Invalid email or password');
     }
 });
@@ -63,9 +63,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    // Use the frontend port (3000) for the reset link
-    const resetURL = `http://localhost:3000/reset-password/${resetToken}`; 
-    
+    // Use the frontend URL for the reset link
+    const resetURL = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+
     try {
         await sendPasswordResetEmail(user.email, resetURL);
         res.json({ message: 'Password reset link sent to email.' });
@@ -87,7 +87,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     const user = await User.findOne({
         resetPasswordToken,
-        resetPasswordExpire: { $gt: Date.now() }, 
+        resetPasswordExpire: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -99,7 +99,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
-    await user.save(); 
+    await user.save();
 
     res.json({
         _id: user._id,

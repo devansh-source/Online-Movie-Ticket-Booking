@@ -8,8 +8,12 @@ import MovieDetailPage from './pages/MovieDetailPage';
 import MyBookingsPage from './pages/MyBookingsPage'; 
 import MovieListPageAdmin from './pages/MovieListPageAdmin'; 
 import AdminDashboard from './pages/AdminDashboard'; 
-import ForgotPasswordPage from './pages/ForgotPasswordPage'; // KEEPING
-import ResetPasswordPage from './pages/ResetPasswordPage'; // KEEPING
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import BookingListPageAdmin from './pages/BookingListPageAdmin';
+import UserListPageAdmin from './pages/UserListPageAdmin';
+import MovieFormPageAdmin from './pages/MovieFormPageAdmin';
+import PaymentPage from './pages/PaymentPage';
 
 function App() {
     return (
@@ -28,10 +32,15 @@ function App() {
                     {/* --- Password Reset Routes (KEPT) --- */}
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+                    <Route path="/payment" element={<PaymentPage />} />
 
                     {/* --- Admin Routes --- */}
                     <Route path="/admin/dashboard" element={<AdminDashboard />} /> 
                     <Route path="/admin/movielist" element={<MovieListPageAdmin />} /> 
+                    <Route path="/admin/bookings" element={<BookingListPageAdmin />} /> 
+                    <Route path="/admin/users" element={<UserListPageAdmin />} /> 
+                    <Route path="/admin/movie/add" element={<MovieFormPageAdmin />} /> 
+                    <Route path="/admin/movie/edit/:id" element={<MovieFormPageAdmin />} /> 
                 </Routes>
             </main>
         </Router>

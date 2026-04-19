@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import api from '../utils/axiosConfig';
+import AdminSidebar from '../components/AdminSidebar';
 
 const MovieListPageAdmin = () => {
     const [movies, setMovies] = useState([]);
@@ -9,30 +10,21 @@ const MovieListPageAdmin = () => {
     const navigate = useNavigate();
 
     const fetchMovies = useCallback(async () => {
-        let userInfo = null;
-        try {
-            userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        } catch (e) {
-            console.warn('localStorage access blocked or invalid data');
-        }
-
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         if (!userInfo || !userInfo.isAdmin) {
-            alert('Access Denied. Admin privileges required.');
-            return navigate('/');
+            navigate('/');
+            return;
         }
         
         try {
             const config = {
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
+                headers: { Authorization: `Bearer ${userInfo.token}` },
             };
-            // Uses the public GET route, but we use the token to check admin status if needed
-            const { data } = await axios.get('http://localhost:5000/api/movies', config);
+            const { data } = await api.get('/movies', config);
             setMovies(data);
             setLoading(false);
         } catch (err) {
-            setError('Failed to load movies or unauthorized access.');
+            setError('Failed to load movies.');
             setLoading(false);
         }
     }, [navigate]);
@@ -43,26 +35,14 @@ const MovieListPageAdmin = () => {
 
     const deleteHandler = async (id) => {
         if (window.confirm('Are you sure you want to delete this movie?')) {
-            let userInfo = null;
-            try {
-                userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            } catch (e) {
-                console.warn('localStorage access blocked or invalid data');
-            }
-            if (!userInfo || !userInfo.token) {
-                alert('User not authenticated. Please log in again.');
-                return;
-            }
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             try {
                 const config = {
-                    headers: {
-                        Authorization: `Bearer ${userInfo.token}`,
-                    },
+                    headers: { Authorization: `Bearer ${userInfo.token}` },
                 };
-
-                await axios.delete(`http://localhost:5000/api/movies/${id}`, config);
+                await api.delete(`/movies/${id}`, config);
                 alert('Movie Deleted!');
-                fetchMovies(); // Refresh list
+                fetchMovies(); 
             } catch (err) {
                 alert('Failed to delete movie.');
             }
@@ -73,46 +53,58 @@ const MovieListPageAdmin = () => {
     if (error) return <div className="error-message">{error}</div>;
 
     return (
-        <div className="admin-movie-list-page">
-            <h1>Movie Management (Admin)</h1>
-            <button className="btn-primary mb-3" onClick={() => alert('Navigate to Movie Creation Form')}>
-                + Create New Movie
-            </button>
-            <table className="movie-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>TITLE</th>
-                        <th>SHOWTIMES</th>
-                        <th>ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {movies.map((movie) => (
-                        <tr key={movie._id}>
-                            <td>{movie._id}</td>
-                            <td>{movie.title}</td>
-                            <td>{movie.showtimes.length}</td>
-                            <td>
-                                <button 
-                                    className="btn-action edit" 
-                                    onClick={() => alert(`Edit ${movie.title}`)}
-                                >
-                                    Edit
-                                </button>
-                                <button 
-                                    className="btn-action delete" 
-                                    onClick={() => deleteHandler(movie._id)}
-                                >
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="admin-layout">
+            <AdminSidebar />
+            
+            <main className="admin-main-content">
+                <header className="admin-header-flex" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px'}}>
+                    <h1 className="dashboard-title" style={{marginBottom: 0}}>Catalog Management</h1>
+                    <button className="btn-primary" onClick={() => navigate('/admin/movie/add')}>
+                        + Add New Movie
+                    </button>
+                </header>
+
+                <div className="admin-movie-list-page">
+                    <table className="movie-table">
+                        <thead>
+                            <tr>
+                                <th>Poster</th>
+                                <th>Movie Title</th>
+                                <th>Active Showtimes</th>
+                                <th>Release Date</th>
+                                <th style={{textAlign: 'right'}}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {movies.map((movie) => (
+                                <tr key={movie._id}>
+                                    <td>
+                                        <img src={movie.posterUrl} alt={movie.title} style={{width: '40px', height: '60px', borderRadius: '4px', objectFit: 'cover'}} />
+                                    </td>
+                                    <td style={{fontWeight: '600'}}>{movie.title}</td>
+                                    <td>{movie.showtimes.length} Shows</td>
+                                    <td>{movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : 'N/A'}</td>
+                                    <td style={{textAlign: 'right'}}>
+                                        <button 
+                                            className="btn-action edit" 
+                                            onClick={() => navigate(`/admin/movie/edit/${movie._id}`)}
+                                        >
+                                            Edit
+                                        </button>
+                                        <button 
+                                            className="btn-action delete" 
+                                            onClick={() => deleteHandler(movie._id)}
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </main>
         </div>
     );
 };
-
 export default MovieListPageAdmin;

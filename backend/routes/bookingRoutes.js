@@ -1,5 +1,5 @@
 const express = require('express');
-const { createBooking, getUserBookings, lockSeats, confirmBooking, releaseSeats, cancelBooking, getWalletBalance, addToWallet } = require('../controllers/bookingController');
+const { createBooking, getUserBookings, lockSeats, confirmBooking, releaseSeats, cancelBooking, getWalletBalance, addToWallet, deleteBooking } = require('../controllers/bookingController');
 const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
@@ -18,5 +18,6 @@ router.route('/release-seats').delete(protect, releaseSeats);
 router.route('/cancel').post(protect, cancelBooking);
 router.route('/wallet-balance').get(protect, getWalletBalance);
 router.route('/add-to-wallet').post(protect, addToWallet);
+router.route('/:id').delete(protect, deleteBooking);
 
 module.exports = router;

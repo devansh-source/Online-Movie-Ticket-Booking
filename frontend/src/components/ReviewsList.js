@@ -11,7 +11,7 @@ const ReviewsList = ({ reviews }) => {
             {reviews.map((review) => (
                 <div key={review._id} className="review-item">
                     <div className="review-header">
-                        <strong>{review.userId.name}</strong>
+                        <strong>{review.userId?.name || 'Anonymous'}</strong>
                         <span>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
                         <small>{new Date(review.createdAt).toLocaleDateString()}</small>
                     </div>

@@ -54,55 +54,67 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="auth-container">
-            <form onSubmit={submitHandler} className="auth-form">
-                <h2>Create Account</h2>
-                {error && <div className="alert-error">{error}</div>}
+        <div className="auth-page-wrapper">
+            <div className="auth-container">
+                <div className="auth-card">
+                    <div className="auth-header">
+                        <h2>Create Your Account</h2>
+                        <p>Join CinePass and book your tickets instantly</p>
+                    </div>
 
-                <div className="form-group">
-                    <label>Name</label>
-                    <input 
-                        type="text" 
-                        placeholder="Enter Name" 
-                        value={name} 
-                        onChange={(e) => setName(e.target.value)} 
-                        required 
-                    />
+                    <form onSubmit={submitHandler} className="auth-form">
+                        {error && <div className="alert-error" style={{marginBottom: '20px'}}>{error}</div>}
+
+                        <div className="form-group">
+                            <label>Full Name</label>
+                            <input 
+                                type="text" 
+                                placeholder="Enter your full name" 
+                                value={name} 
+                                onChange={(e) => setName(e.target.value)} 
+                                required 
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Email Address</label>
+                            <input 
+                                type="email" 
+                                placeholder="Enter your email" 
+                                value={email} 
+                                onChange={(e) => setEmail(e.target.value)} 
+                                required 
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Password</label>
+                            <input 
+                                type="password" 
+                                placeholder="Create a password" 
+                                value={password} 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                required 
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Confirm Password</label>
+                            <input 
+                                type="password" 
+                                placeholder="Confirm your password" 
+                                value={confirmPassword} 
+                                onChange={(e) => setConfirmPassword(e.target.value)} 
+                                required 
+                            />
+                        </div>
+                        <button type="submit" className="btn-primary btn-auth" style={{marginTop: '20px'}} disabled={loading}>
+                            {loading ? 'Creating Account...' : 'Register'}
+                        </button>
+                    </form>
+
+                    <div className="auth-footer">
+                        Already have an account? <span onClick={() => navigate('/login')}>Sign In</span>
+                    </div>
                 </div>
-                <div className="form-group">
-                    <label>Email Address</label>
-                    <input 
-                        type="email" 
-                        placeholder="Enter Email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        required 
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Password</label>
-                    <input 
-                        type="password" 
-                        placeholder="Enter Password (min 6 chars)" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        required 
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Confirm Password</label>
-                    <input 
-                        type="password" 
-                        placeholder="Confirm Password" 
-                        value={confirmPassword} 
-                        onChange={(e) => setConfirmPassword(e.target.value)} 
-                        required 
-                    />
-                </div>
-                <button type="submit" className="btn-primary" disabled={loading}>
-                    {loading ? 'Registering...' : 'Register'}
-                </button>
-            </form>
+            </div>
         </div>
     );
 };
