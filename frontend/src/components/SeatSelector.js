@@ -7,9 +7,11 @@ import { useTranslation } from 'react-i18next';
 
 // --- ADD THIS LINE ---
 // Use the live Render URL for production, otherwise use localhost
-const SOCKET_URL = process.env.NODE_ENV === 'production'
-    ? 'https://online-movie-ticket-booking-backend.onrender.com'
-    : 'http://localhost:5000';
+const SOCKET_URL = process.env.REACT_APP_API_URL 
+    ? process.env.REACT_APP_API_URL.replace('/api', '') 
+    : (process.env.NODE_ENV === 'production'
+        ? 'https://online-movie-ticket-booking-backend.onrender.com'
+        : 'http://localhost:5000');
 // --- END OF ADD ---
 
 const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
@@ -40,7 +42,7 @@ const PaymentForm = ({ totalPrice, onPaymentSuccess, onPaymentError }) => {
         <form onSubmit={handleSubmit} className="payment-form">
             <CardElement />
             <button type="submit" disabled={!stripe || loading}>
-                {loading ? t('processing') : `${t('pay')} $${totalPrice}`}
+                {loading ? t('processing') : `${t('pay')} ₹${totalPrice}`}
             </button>
         </form>
     );

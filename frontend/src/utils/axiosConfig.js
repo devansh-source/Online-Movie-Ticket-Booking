@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 // Use the live Render URL for production, otherwise use localhost
-const baseURL = process.env.NODE_ENV === 'production'
+const baseURL = process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production'
     ? 'https://online-movie-ticket-booking-backend.onrender.com/api'
-    : 'http://localhost:5000/api';
+    : 'http://localhost:5000/api');
 
 const api = axios.create({
   baseURL: baseURL,
