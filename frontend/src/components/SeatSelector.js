@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 const SOCKET_URL = process.env.REACT_APP_API_URL 
     ? process.env.REACT_APP_API_URL.replace('/api', '') 
     : (process.env.NODE_ENV === 'production'
-        ? 'https://online-movie-ticket-booking-backend.onrender.com'
+        ? 'https://cinepass-backend.onrender.com'
         : 'http://localhost:5000');
 // --- END OF ADD ---
 
