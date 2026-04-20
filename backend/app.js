@@ -16,9 +16,12 @@ const app = express();
 
 // --------------------- Middleware Setup ---------------------
 const allowedOrigins = [
-  "http://localhost:3000", // local development
-  "https://online-movie-ticket-booking-frontend-pj7x2q9y2.vercel.app", // your deployed frontend
-  "https://online-movie-ticket-booking-frontend-46lsu9qbo.vercel.app" // additional frontend URL if needed
+  "http://localhost:3000",
+  "https://online-movie-ticket-booking-frontend.onrender.com",
+  "https://online-movie-ticket-booking-frontend-pj7x2q9y2.vercel.app",
+  "https://online-movie-ticket-booking-frontend-46lsu9qbo.vercel.app",
+  // Dynamically add FRONTEND_URL from environment (for any new deployment)
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
 ];
 
 app.use(
